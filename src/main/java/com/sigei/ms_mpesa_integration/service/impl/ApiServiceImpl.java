@@ -33,8 +33,9 @@ public class ApiServiceImpl implements ApiService {
     public ApiResponse triggerSTKPush(CustomerMpesaRequest payload) throws Exception {
         try {
             //initiate stk
-            String stkUrl = properties.getStkUrl();
-
+            if (mpesaService.mpesaToken() == null){
+                return new ApiResponse(new ResponseHeader(ERROR_CODE,ERROR_MESSAGE), new ResponseBody(null));
+            }
             HttpHeaders httpHeaders = new HttpHeaders();
             httpHeaders.setBearerAuth(mpesaService.mpesaToken());
 
@@ -54,7 +55,7 @@ public class ApiServiceImpl implements ApiService {
 
             LOG.info("M-pesa STK request. {}", objectMapper.writeValueAsString(stkRequest));
             HttpEntity<StkRequest> httpEntity = new HttpEntity<>(stkRequest, httpHeaders);
-            ResponseEntity<StkResponse> result = restTemplate.postForEntity(stkUrl, httpEntity, StkResponse.class);
+            ResponseEntity<StkResponse> result = restTemplate.postForEntity(properties.getStkUrl(), httpEntity, StkResponse.class);
             LOG.info("M-pesa STK response. {}", objectMapper.writeValueAsString(result.getBody()));
             if (!result.getBody().getResponseCode().equals("0")){
                 return new ApiResponse(new ResponseHeader(ERROR_CODE,ERROR_MESSAGE), new ResponseBody(result.getBody()));
