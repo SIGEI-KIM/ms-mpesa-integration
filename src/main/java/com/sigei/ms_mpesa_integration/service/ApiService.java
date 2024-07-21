@@ -6,7 +6,9 @@ import com.sigei.ms_mpesa_integration.model.response.ApiResponse;
 import com.sigei.ms_mpesa_integration.model.response.StkConfirmationResponse;
 
 public interface ApiService {
-    ApiResponse triggerSTKPush(CustomerMpesaRequest payload) throws Exception;
+    ApiResponse triggerSTKPush(CustomerMpesaRequest payload)
+            throws Exception;
 
-    void processStkTransaction(StkConfirmationResponse payload) throws JsonProcessingException;
+    void processStkTransaction(StkConfirmationResponse payload)
+            throws JsonProcessingException;
 }

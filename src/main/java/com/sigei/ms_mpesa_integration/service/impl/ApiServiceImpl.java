@@ -3,6 +3,8 @@ package com.sigei.ms_mpesa_integration.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sigei.ms_mpesa_integration.config.ConfigProperties;
+import com.sigei.ms_mpesa_integration.dblayer.entity.Transaction;
+import com.sigei.ms_mpesa_integration.dblayer.repository.TransactionRepository;
 import com.sigei.ms_mpesa_integration.model.request.CustomerMpesaRequest;
 import com.sigei.ms_mpesa_integration.model.request.StkRequest;
 import com.sigei.ms_mpesa_integration.model.response.*;
@@ -23,7 +25,7 @@ import static com.sigei.ms_mpesa_integration.utils.ApiVariables.*;
 public class ApiServiceImpl implements ApiService {
     private static final Logger LOG = LoggerFactory.getLogger(ApiServiceImpl.class);
     private final MpesaService mpesaService;
-
+    private final TransactionRepository transactionRepository;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
     private final Helper helper;
@@ -60,6 +62,19 @@ public class ApiServiceImpl implements ApiService {
             if (!result.getBody().getResponseCode().equals("0")){
                 return new ApiResponse(new ResponseHeader(ERROR_CODE,ERROR_MESSAGE), new ResponseBody(result.getBody()));
             }
+
+            Transaction transaction = Transaction.builder()
+                    .merchantRequestID(result.getBody().getMerchantRequestID())
+                    .checkoutRequestID(result.getBody().getCheckoutRequestID())
+                    .ackResponseCode(result.getBody().getResponseCode())
+                    .ackResponseDescription(result.getBody().getResponseDescription())
+                    .ackCustomerMessage(result.getBody().getCustomerMessage())
+                    .amount(payload.getAmount())
+                    .phoneNumber(payload.getMsisdn())
+                    .build();
+
+            transactionRepository.save(transaction);
+
             return new ApiResponse(new ResponseHeader(SUCCESS_CODE,SUCCESS_MESSAGE), new ResponseBody(result.getBody()));
         }catch (Exception e){
             LOG.error("Error occurred. {}", e.getMessage());
@@ -71,5 +86,4 @@ public class ApiServiceImpl implements ApiService {
     public void processStkTransaction(StkConfirmationResponse payload) throws JsonProcessingException {
         System.out.println("payload: " + objectMapper.writeValueAsString(payload));
     }
-
 }
